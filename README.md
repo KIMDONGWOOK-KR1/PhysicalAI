@@ -2,10 +2,16 @@
 
 **경북대학교 × 전남대학교 Physical AI 경진대회 (2026-08-19 ~ 08-21, AWS DeepRacer 실물 차량 타임트라이얼)**
 
+![Python](https://img.shields.io/badge/Python-3.10-3776AB?logo=python&logoColor=white)
+![AWS DeepRacer](https://img.shields.io/badge/AWS-DeepRacer-FF9900?logo=amazonaws&logoColor=white)
+![RL](https://img.shields.io/badge/RL-PPO-blueviolet)
+![pandas](https://img.shields.io/badge/pandas-150458?logo=pandas&logoColor=white)
+![Result](https://img.shields.io/badge/본선-최종_6위-success)
+
 > **AWS DeepRacer**(1/18 스케일 자율주행 RC카 + 클라우드 강화학습 플랫폼)로 진행된 대회.
 > 시뮬레이션에서 가장 빠른 모델이 아니라, **실제 차가 완주하는 모델**을 만드는 과정의 기록이다.
 > 3일간 교육 → 보상함수 설계 → 로그 분석 → 연속/이산 행동공간 비교 → clone 기반 점진 개선 → 실물 검증을 거쳐
-> **실물 트랙 9초대, throttle 68%로 대회 시점 1위 기록**을 낸 모델(`disc2-10act`)을 완성했다.
+> **실물 트랙 9초대, throttle 68%로 연습 주행 당시 1위 기록**을 낸 모델(`disc2-10act`)을 완성했고, 본선 **최종 6위**를 했다.
 
 ---
 
@@ -19,6 +25,12 @@
 | 트랙 | A to Z Speedway (내부명 `reInvent2019_wide`, 16.6 m, 폭 107 cm, 반시계) |
 | 본선 형식 | **실물 차량 Time Trial** — 팀당 2회 주행, 최단 랩타임 채택. 탈선 시 이탈 지점 재시작 + **1초 페널티** |
 | 팀 | 4명 |
+
+<details><summary>공식 일정표</summary>
+
+![대회 일정표](docs/images/competition_schedule.png)
+
+</details>
 
 ### 3일 진행
 
@@ -38,7 +50,15 @@
 | 알고리즘 | PPO (AWS DeepRacer), 보상함수·행동공간 직접 설계 |
 | 최종 모델 | `disc2-10act` — **이산 10행동**(조향 0/±10/±20°, 속도 1.6~3.0) + 조향 평활화 보상 |
 | 핵심 지표 | 스텝당 조향 변화 **16.6° → 8°대** (시뮬 로그), 시뮬 5/5 완주 |
-| 실물 결과 | **9초대 완주 (throttle 68%)**, 대회 당시 1위 |
+| 실물 결과 | **9초대 완주 (throttle 68%)**, 연습 주행 당시 1위 → 본선 **최종 6위** |
+
+
+## 내 역할
+
+- 대회 전 트랙 데이터 분석과 최적 레이싱 라인 계산 (`data/`)
+- 팀원 baseline 모델의 평가 로그 분석 → bang-bang 조향 원인 규명 (`analysis/`, [ANALYSIS_test1](docs/ANALYSIS_test1.md))
+- 보상함수 5종 설계·검증, 이산 행동공간 설계 (`reward_functions/`, `docs/action_space_*.md`)
+- clone 실험 설계와 모델 간 지표 비교, 실물 주행 결과 기반 최종 모델 선정
 
 ---
 
@@ -92,7 +112,8 @@
 │   ├── ANALYSIS_test1.md     ← 팀원 원본 모델 로그 분석
 │   ├── MANUAL_import_clone.md← DeepRacer on AWS Import/Clone 절차
 │   ├── action_space_disc*.md ← 이산 행동공간 입력표
-│   └── INTERVIEW_script.md   ← 수상 인터뷰 대본
+│   ├── INTERVIEW_script.md   ← 수상 인터뷰 대본
+│   └── images/               ← 대회 일정표
 ├── reward_functions/         ← 보상함수 5종 (+ README)
 ├── analysis/                 ← 로그 분석 스크립트 (+ README)
 ├── data/                     ← 최적 레이싱 라인 CSV, 시뮬 waypoint
@@ -120,4 +141,4 @@ python analysis/compare_eval.py eval_disc1-smooth eval_disc2-v2 eval_disc3-slots
 Record of a 3-day **AWS DeepRacer** competition (Kyungpook National Univ. × Chonnam National Univ. Physical AI Challenge, Aug 19–21 2026): day 1 DeepRacer/RL training and first models, day 2 clone training and physical-car track practice, day 3 the final — a **physical-car** time trial on A to Z Speedway (16.6 m, CCW; best of 2 runs, +1 s per off-track).
 A teammate's baseline was fast in simulation (6.9 s) but kept leaving the track on the real car. Log analysis showed **bang-bang steering** (16.6° change per step) caused by a continuous action space with a `speed²` reward.
 We redesigned the reward (pace term, curvature-based target speed from forward waypoints, **multiplicative steering-smoothness penalty**, no absolute coordinates), switched to a **10-action discrete space**, and iterated by cloning with one variable changed at a time, measuring steering jump / full-steer ratio / per-segment speed from sim-trace logs after every step.
-The final model `disc2-10act` cut steering change to ~8°/step, completed 5/5 evaluation laps, and ran **~9 s laps on the real track at 68% throttle — first place at the time of the run**.
+The final model `disc2-10act` cut steering change to ~8°/step, completed 5/5 evaluation laps, and ran **~9 s laps on the real track at 68% throttle — first place at the time of the run**; **6th place in the final**.
